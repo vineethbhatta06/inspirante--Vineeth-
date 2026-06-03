@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/student.dart';
 import '../backend/database_helper.dart';
 
+import 'attendance_screen.dart';
+
 class HomeScreen extends StatefulWidget {
 
   const HomeScreen({super.key});
@@ -17,6 +19,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Student> students = [];
 
+  Map<int, double> percentages = {};
+
   bool isLoading = true;
 
   @override
@@ -24,20 +28,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
     super.initState();
 
-    loadStudents();
+    loadData();
   }
 
-  Future<void> loadStudents() async {
+  Future<void> loadData() async {
 
     final loadedStudents =
         await dbHelper.getAllStudents();
+
+    Map<int, double> loadedPercentages = {};
+
+    for (Student student in loadedStudents) {
+
+      final percentage =
+          await dbHelper.getAttendancePercentage(
+            student.id,
+          );
+
+      loadedPercentages[student.id] =
+          percentage;
+    }
 
     setState(() {
 
       students = loadedStudents;
 
+      percentages = loadedPercentages;
+
       isLoading = false;
     });
+
+    print(dbHelper.testMethod());
+  }
+
+  Color getPercentageColor(double percentage) {
+
+    if (percentage >= 75) {
+      return Colors.green;
+    }
+
+    else if (percentage >= 50) {
+      return Colors.orange;
+    }
+
+    else {
+      return Colors.red;
+    }
   }
 
   @override
@@ -66,24 +102,63 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 final student = students[index];
 
-                return ListTile(
+                final percentage =
+                    percentages[student.id] ?? 0;
 
-                  leading: CircleAvatar(
-                    child: Text(
-                      student.id.toString(),
+                return Card(
+
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+
+                  child: ListTile(
+
+                    leading: CircleAvatar(
+                      child: Text(
+                        student.id.toString(),
+                      ),
                     ),
-                  ),
 
-                  title: Text(
-                    student.name,
-                  ),
+                    title: Text(
+                      student.name,
+                    ),
 
-                  subtitle: const Text(
-                    'Attendance: 0%',
+                    subtitle: Text(
+                      'Attendance: ${percentage.toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        color: getPercentageColor(
+                          percentage,
+                        ),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 );
               },
             ),
+
+      floatingActionButton: FloatingActionButton(
+
+        onPressed: () async{
+
+            await Navigator.push(
+              
+              context,
+
+              MaterialPageRoute(
+
+                builder: (_) =>
+                    const AttendanceScreen(),
+              ),
+            );
+            loadData();
+        },
+
+        child: const Icon(
+          Icons.add,
+        ),
+      ),
     );
   }
 }
