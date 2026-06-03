@@ -5,18 +5,22 @@ import '../backend/database_helper.dart';
 
 import 'attendance_screen.dart';
 import 'history_screen.dart';
+import 'student_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
 
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() =>
+      _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState
+    extends State<HomeScreen> {
 
-  final DatabaseHelper dbHelper = DatabaseHelper();
+  final DatabaseHelper dbHelper =
+      DatabaseHelper();
 
   List<Student> students = [];
 
@@ -42,14 +46,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final loadedStudents =
         await dbHelper.getAllStudents();
 
-    Map<int, double> loadedPercentages = {};
+    Map<int, double> loadedPercentages =
+        {};
 
-    for (Student student in loadedStudents) {
+    for (Student student
+        in loadedStudents) {
 
       final percentage =
-          await dbHelper.getAttendancePercentage(
-            student.id,
-          );
+          await dbHelper
+              .getAttendancePercentage(
+        student.id,
+      );
 
       loadedPercentages[student.id] =
           percentage;
@@ -59,13 +66,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
       students = loadedStudents;
 
-      percentages = loadedPercentages;
+      percentages =
+          loadedPercentages;
 
       isLoading = false;
     });
   }
 
-  Color getPercentageColor(double percentage) {
+  Color getPercentageColor(
+    double percentage,
+  ) {
 
     if (percentage >= 75) {
       return Colors.green;
@@ -97,7 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
 
     return Scaffold(
 
@@ -236,7 +248,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
 
                           subtitle: Text(
-
                             'Attendance: ${percentage.toStringAsFixed(1)}%',
 
                             style:
@@ -251,6 +262,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                   FontWeight.bold,
                             ),
                           ),
+
+                          trailing:
+                              const Icon(
+                            Icons
+                                .arrow_forward_ios,
+                          ),
+
+                          onTap:
+                              () async {
+
+                            await Navigator
+                                .push(
+
+                              context,
+
+                              MaterialPageRoute(
+
+                                builder:
+                                    (_) =>
+                                        StudentDetailsScreen(
+                                  student:
+                                      student,
+                                ),
+                              ),
+                            );
+
+                            await loadData();
+                          },
                         ),
                       );
                     },

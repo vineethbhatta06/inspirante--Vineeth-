@@ -326,5 +326,59 @@ Future<void> updateAttendance(
 
   return result.isNotEmpty;
 }
-  
+  Future<int> getPresentCount(
+  int studentId,
+) async {
+
+  final db = await database;
+
+  final result = await db.rawQuery(
+    '''
+    SELECT COUNT(*) as count
+    FROM attendance_records
+    WHERE student_id = ?
+    AND is_present = 1
+    ''',
+    [studentId],
+  );
+
+  return result.first['count'] as int;
+}
+
+Future<int> getTotalSessions() async {
+
+  final db = await database;
+
+  final result = await db.rawQuery(
+    '''
+    SELECT COUNT(*) as count
+    FROM attendance_sessions
+    ''',
+  );
+
+  return result.first['count'] as int;
+}
+
+Future<List<Map<String, dynamic>>>
+    getStudentAttendanceHistory(
+  int studentId,
+) async {
+
+  final db = await database;
+
+  return await db.rawQuery(
+    '''
+    SELECT
+      attendance_sessions.date,
+      attendance_records.is_present
+    FROM attendance_records
+    INNER JOIN attendance_sessions
+    ON attendance_records.session_id =
+       attendance_sessions.id
+    WHERE attendance_records.student_id = ?
+    ORDER BY attendance_sessions.id DESC
+    ''',
+    [studentId],
+  );
+}
 }
