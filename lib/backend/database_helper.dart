@@ -126,7 +126,7 @@ class DatabaseHelper {
 
         records.add(
           AttendanceRecord(
-            id: 0,
+             id: null,
             sessionId: session.id,
             studentId: student.id,
             isPresent: isPresent,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/student.dart';
-import '../services/database_helper.dart';
+import '../backend/database_helper.dart';
 
 class HomeScreen extends StatefulWidget {
 
