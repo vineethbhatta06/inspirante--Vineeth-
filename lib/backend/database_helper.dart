@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -139,6 +141,50 @@ class DatabaseHelper {
         'attendance_records',
         record.toMap(),
       );
+    }
+  }
+
+  Future<List<Student>> getAllStudents() async {
+
+    try {
+
+      final db = await database;
+
+      final List<Map<String, dynamic>> maps =
+          await db.query('students');
+
+      return List.generate(
+        maps.length,
+        (index) => Student.fromMap(maps[index]),
+      );
+
+    } catch (e) {
+
+      log('Error fetching students: $e');
+
+      return [];
+    }
+  }
+
+  Future<List<AttendanceSession>> getAllSessions() async {
+
+    try {
+
+      final db = await database;
+
+      final List<Map<String, dynamic>> maps =
+          await db.query('attendance_sessions');
+
+      return List.generate(
+        maps.length,
+        (index) => AttendanceSession.fromMap(maps[index]),
+      );
+
+    } catch (e) {
+
+      log('Error fetching sessions: $e');
+
+      return [];
     }
   }
 }
