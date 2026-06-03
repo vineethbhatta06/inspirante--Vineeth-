@@ -4,6 +4,7 @@ import '../models/student.dart';
 import '../backend/database_helper.dart';
 
 import 'attendance_screen.dart';
+import 'history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
 
@@ -33,6 +34,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> loadData() async {
 
+    setState(() {
+
+      isLoading = true;
+    });
+
     final loadedStudents =
         await dbHelper.getAllStudents();
 
@@ -57,8 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
       isLoading = false;
     });
-
-    print(dbHelper.testMethod());
   }
 
   Color getPercentageColor(double percentage) {
@@ -67,13 +71,29 @@ class _HomeScreenState extends State<HomeScreen> {
       return Colors.green;
     }
 
-    else if (percentage >= 50) {
+    if (percentage >= 50) {
       return Colors.orange;
     }
 
-    else {
-      return Colors.red;
+    return Colors.red;
+  }
+
+  double getClassAverage() {
+
+    if (percentages.isEmpty) {
+      return 0;
     }
+
+    double total = 0;
+
+    for (double value
+        in percentages.values) {
+
+      total += value;
+    }
+
+    return total /
+        percentages.length;
   }
 
   @override
@@ -86,73 +106,176 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text(
           'Attendance Manager',
         ),
+
+        actions: [
+
+          IconButton(
+
+            icon: const Icon(
+              Icons.history,
+            ),
+
+            onPressed: () async {
+
+              await Navigator.push(
+
+                context,
+
+                MaterialPageRoute(
+
+                  builder: (_) =>
+                      const HistoryScreen(),
+                ),
+              );
+
+              await loadData();
+            },
+          ),
+        ],
       ),
 
       body: isLoading
 
           ? const Center(
-              child: CircularProgressIndicator(),
+              child:
+                  CircularProgressIndicator(),
             )
 
-          : ListView.builder(
+          : Column(
 
-              itemCount: students.length,
+              children: [
 
-              itemBuilder: (context, index) {
+                Card(
 
-                final student = students[index];
-
-                final percentage =
-                    percentages[student.id] ?? 0;
-
-                return Card(
-
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                  margin:
+                      const EdgeInsets.all(
+                    12,
                   ),
 
-                  child: ListTile(
+                  child: Padding(
 
-                    leading: CircleAvatar(
-                      child: Text(
-                        student.id.toString(),
-                      ),
+                    padding:
+                        const EdgeInsets.all(
+                      16,
                     ),
 
-                    title: Text(
-                      student.name,
-                    ),
+                    child: Column(
 
-                    subtitle: Text(
-                      'Attendance: ${percentage.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        color: getPercentageColor(
-                          percentage,
+                      crossAxisAlignment:
+                          CrossAxisAlignment
+                              .start,
+
+                      children: [
+
+                        Text(
+                          'Total Students: ${students.length}',
+                          style:
+                              const TextStyle(
+                            fontSize: 18,
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
                         ),
-                        fontWeight: FontWeight.bold,
-                      ),
+
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        Text(
+                          'Class Average Attendance: ${getClassAverage().toStringAsFixed(1)}%',
+                          style:
+                              const TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                );
-              },
+                ),
+
+                Expanded(
+
+                  child:
+                      ListView.builder(
+
+                    itemCount:
+                        students.length,
+
+                    itemBuilder:
+                        (context, index) {
+
+                      final student =
+                          students[index];
+
+                      final percentage =
+                          percentages[
+                                  student.id] ??
+                              0;
+
+                      return Card(
+
+                        margin:
+                            const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+
+                        child: ListTile(
+
+                          leading:
+                              CircleAvatar(
+
+                            child: Text(
+                              student.id
+                                  .toString(),
+                            ),
+                          ),
+
+                          title: Text(
+                            student.name,
+                          ),
+
+                          subtitle: Text(
+
+                            'Attendance: ${percentage.toStringAsFixed(1)}%',
+
+                            style:
+                                TextStyle(
+
+                              color:
+                                  getPercentageColor(
+                                percentage,
+                              ),
+
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
 
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton:
+          FloatingActionButton(
 
-        onPressed: () async{
+        onPressed: () async {
 
-            await Navigator.push(
-              
-              context,
+          await Navigator.push(
 
-              MaterialPageRoute(
+            context,
 
-                builder: (_) =>
-                    const AttendanceScreen(),
-              ),
-            );
-            loadData();
+            MaterialPageRoute(
+
+              builder: (_) =>
+                  const AttendanceScreen(),
+            ),
+          );
+
+          await loadData();
         },
 
         child: const Icon(

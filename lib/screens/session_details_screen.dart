@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../backend/database_helper.dart';
+import '../models/attendance_record.dart';
 import '../models/student.dart';
 
-class AttendanceScreen extends StatefulWidget {
+class SessionDetailsScreen extends StatefulWidget {
 
-  const AttendanceScreen({super.key});
+  final int sessionId;
+  final String sessionDate;
+
+  const SessionDetailsScreen({
+    super.key,
+    required this.sessionId,
+    required this.sessionDate,
+  });
 
   @override
-  State<AttendanceScreen> createState() =>
-      _AttendanceScreenState();
+  State<SessionDetailsScreen> createState() =>
+      _SessionDetailsScreenState();
 }
 
-class _AttendanceScreenState
-    extends State<AttendanceScreen> {
+class _SessionDetailsScreenState
+    extends State<SessionDetailsScreen> {
 
   final DatabaseHelper dbHelper =
       DatabaseHelper();
@@ -29,17 +37,24 @@ class _AttendanceScreenState
 
     super.initState();
 
-    loadStudents();
+    loadData();
   }
 
-  Future<void> loadStudents() async {
+  Future<void> loadData() async {
 
     final loadedStudents =
         await dbHelper.getAllStudents();
 
-    for (var student in loadedStudents) {
+    final records =
+        await dbHelper.getAttendanceForSession(
+      widget.sessionId,
+    );
 
-      attendanceMap[student.id] = true;
+    for (AttendanceRecord record
+        in records) {
+
+      attendanceMap[record.studentId] =
+          record.isPresent;
     }
 
     setState(() {
@@ -50,64 +65,20 @@ class _AttendanceScreenState
     });
   }
 
-  Future<void> saveAttendance() async {
+  Future<void> saveChanges() async {
 
-    String today =
-        DateTime.now()
-            .toIso8601String()
-            .split('T')
-            .first;
+    for (Student student
+        in students) {
 
-    bool alreadyExists =
-        await dbHelper.sessionExists(
-      today,
-    );
-
-    if (alreadyExists) {
-
-      if (mounted) {
-
-        ScaffoldMessenger.of(context)
-            .showSnackBar(
-
-          const SnackBar(
-
-            content: Text(
-              'Attendance for today has already been taken.',
-            ),
-          ),
-        );
-      }
-
-      return;
-    }
-
-    int sessionId =
-        await dbHelper.createSession(
-      today,
-    );
-
-    for (var student in students) {
-
-      await dbHelper.saveAttendanceRecord(
-        sessionId,
+      await dbHelper.updateAttendance(
+        widget.sessionId,
         student.id,
-        attendanceMap[student.id] ?? true,
+        attendanceMap[student.id] ??
+            true,
       );
     }
 
     if (mounted) {
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
-
-        const SnackBar(
-
-          content: Text(
-            'Attendance saved successfully.',
-          ),
-        ),
-      );
 
       Navigator.pop(context);
     }
@@ -120,8 +91,8 @@ class _AttendanceScreenState
 
       appBar: AppBar(
 
-        title: const Text(
-          'Mark Attendance',
+        title: Text(
+          widget.sessionDate,
         ),
       ),
 
@@ -138,7 +109,8 @@ class _AttendanceScreenState
 
                 Expanded(
 
-                  child: ListView.builder(
+                  child:
+                      ListView.builder(
 
                     itemCount:
                         students.length,
@@ -192,11 +164,11 @@ class _AttendanceScreenState
                         ElevatedButton(
 
                       onPressed:
-                          saveAttendance,
+                          saveChanges,
 
                       child:
                           const Text(
-                        'Save Attendance',
+                        'Save Changes',
                       ),
                     ),
                   ),

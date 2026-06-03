@@ -311,5 +311,20 @@ Future<void> updateAttendance(
     ],
   );
 }
+
+   Future<bool> sessionExists(
+  String date,
+) async {
+
+  final db = await database;
+
+  final result = await db.query(
+    'attendance_sessions',
+    where: 'date = ?',
+    whereArgs: [date],
+  );
+
+  return result.isNotEmpty;
+}
   
 }
